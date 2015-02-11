@@ -3311,8 +3311,8 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
             src + ". Returning previously allocated block " + lastBlockInFile);
         long offset = pendingFile.computeFileSize();
         onRetryBlock[0] = makeLocatedBlock(lastBlockInFile,
-            ((BlockInfoContiguousUnderConstruction)lastBlockInFile).getExpectedStorageLocations(),
-            offset);
+            ((BlockInfoContiguousUnderConstruction)lastBlockInFile)
+                .getExpectedStorageLocations(), offset);
         return new FileState(pendingFile, src, iip);
       } else {
         // Case 3
@@ -3639,7 +3639,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
               src, new BlockInfoContiguous[] { b });
     }
   }
-
+  
   /**
    * Change the indicated filename. 
    * @deprecated Use {@link #renameTo(String, String, boolean,
@@ -4107,7 +4107,8 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
       throw new AlreadyBeingCreatedException(message);
     case UNDER_CONSTRUCTION:
     case UNDER_RECOVERY:
-      final BlockInfoContiguousUnderConstruction uc = (BlockInfoContiguousUnderConstruction)lastBlock;
+      final BlockInfoContiguousUnderConstruction uc =
+          (BlockInfoContiguousUnderConstruction)lastBlock;
       // determine if last block was intended to be truncated
       Block recoveryBlock = uc.getTruncateBlock();
       boolean truncateRecovery = recoveryBlock != null;
@@ -4216,9 +4217,8 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
     blockManager.checkReplication(pendingFile);
   }
 
-  @VisibleForTesting
-  BlockInfoContiguous getStoredBlock(Block block) {
-    return blockManager.getStoredBlock(block);
+  public BlockInfoContiguous getStoredBlock(Block block) {
+    return (BlockInfoContiguous) blockManager.getStoredBlock(block);
   }
   
   @Override
@@ -4377,9 +4377,9 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
                 trimmedTargets.get(i).getStorageInfo(trimmedStorages.get(i));
             if (storageInfo != null) {
               if(copyTruncate) {
-                storageInfo.addBlock(truncatedBlock);
+                storageInfo.addBlock(truncatedBlock, truncatedBlock);
               } else {
-                storageInfo.addBlock(storedBlock);
+                storageInfo.addBlock(storedBlock, storedBlock);
               }
             }
           }
@@ -4747,9 +4747,8 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
 
         while (it.hasNext()) {
           Block b = it.next();
-          BlockInfoContiguous blockInfo = blockManager.getStoredBlock(b);
-          if (blockInfo.getBlockCollection().getStoragePolicyID()
-              == lpPolicy.getId()) {
+          BlockInfoContiguous blockInfo = getStoredBlock(b);
+          if (blockInfo.getBlockCollection().getStoragePolicyID() == lpPolicy.getId()) {
             filesToDelete.add(blockInfo.getBlockCollection());
           }
         }
