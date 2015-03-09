@@ -190,6 +190,7 @@ import org.apache.hadoop.hdfs.protocol.HdfsConstants.SafeModeAction;
 import org.apache.hadoop.hdfs.protocol.HdfsFileStatus;
 import org.apache.hadoop.hdfs.protocol.LocatedBlock;
 import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
+import org.apache.hadoop.hdfs.protocol.LocatedStripedBlock;
 import org.apache.hadoop.hdfs.protocol.QuotaExceededException;
 import org.apache.hadoop.hdfs.protocol.RecoveryInProgressException;
 import org.apache.hadoop.hdfs.protocol.RollingUpgradeException;
@@ -207,6 +208,7 @@ import org.apache.hadoop.hdfs.server.blockmanagement.BlockIdManager;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockInfo;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockInfoContiguous;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockInfoContiguousUnderConstruction;
+import org.apache.hadoop.hdfs.server.blockmanagement.BlockInfoStripedUnderConstruction;
 import org.apache.hadoop.hdfs.server.blockmanagement.BlockManager;
 import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeDescriptor;
 import org.apache.hadoop.hdfs.server.blockmanagement.DatanodeManager;
@@ -1783,8 +1785,14 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
 
     LocatedBlocks blocks = res.blocks;
     if (blocks != null) {
+      List<LocatedBlock> blkList = blocks.getLocatedBlocks();
+      if (blkList == null || blkList.size() == 0 ||
+          blkList.get(0) instanceof LocatedStripedBlock) {
+        // no need to sort locations for striped blocks
+        return blocks;
+      }
       blockManager.getDatanodeManager().sortLocatedBlocks(
-          clientMachine, blocks.getLocatedBlocks());
+          clientMachine, blkList);
 
       // lastBlock is not part of getLocatedBlocks(), might need to sort it too
       LocatedBlock lastBlock = blocks.getLastLocatedBlock();
@@ -3152,7 +3160,6 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
         src, numTargets, clientNode, excludedNodes, blockSize, favoredNodes,
         storagePolicyID);
   }
-
   /**
    * Part II of getAdditionalBlock().
    * Should repeat the same analysis of the file state as in Part 1,
@@ -3162,7 +3169,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
    */
   LocatedBlock storeAllocatedBlock(String src, long fileId, String clientName,
       ExtendedBlock previous, DatanodeStorageInfo[] targets) throws IOException {
-    Block newBlock = null;
+    BlockInfo newBlockInfo = null;
     long offset;
     checkOperation(OperationCategory.WRITE);
     waitForLoadingFSImage();
@@ -3195,8 +3202,9 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
                                 ExtendedBlock.getLocalBlock(previous));
 
       // allocate new block, record block locations in INode.
-      newBlock = createNewBlock(isStriped);
-      saveAllocatedBlock(src, fileState.iip, newBlock, targets, isStriped);
+      Block newBlock = createNewBlock(isStriped);
+      newBlockInfo = saveAllocatedBlock(src, fileState.iip, newBlock, targets,
+          isStriped);
 
       persistNewBlock(src, pendingFile);
       offset = pendingFile.computeFileSize();
@@ -3206,7 +3214,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
     getEditLog().logSync();
 
     // Return located block
-    return makeLocatedBlock(newBlock, targets, offset);
+    return makeLocatedBlock(newBlockInfo, targets, offset);
   }
 
   /*
@@ -3339,11 +3347,18 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
     }
     return new FileState(pendingFile, src, iip);
   }
-
-  LocatedBlock makeLocatedBlock(Block blk, DatanodeStorageInfo[] locs,
-                                        long offset) throws IOException {
-    LocatedBlock lBlk = BlockManager.newLocatedBlock(
-        getExtendedBlock(blk), locs, offset, false);
+  
+  LocatedBlock makeLocatedBlock(BlockInfo blk, DatanodeStorageInfo[] locs,
+      long offset) throws IOException {
+    final LocatedBlock lBlk;
+    if (blk.isStriped()) {
+      assert blk instanceof BlockInfoStripedUnderConstruction;
+      lBlk = new LocatedStripedBlock(getExtendedBlock(blk), locs,
+          ((BlockInfoStripedUnderConstruction) blk).getBlockIndices(),
+          offset, false);
+    } else {
+      lBlk = BlockManager.newLocatedBlock(getExtendedBlock(blk), locs, offset, false);
+    }
     getBlockManager().setBlockToken(
         lBlk, BlockTokenIdentifier.AccessMode.WRITE);
     return lBlk;
