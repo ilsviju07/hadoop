@@ -3356,7 +3356,7 @@ public class FSNamesystem implements Namesystem, FSNamesystemMBean,
     }
     return new FileState(pendingFile, src, iip);
   }
-  
+
   LocatedBlock makeLocatedBlock(BlockInfo blk, DatanodeStorageInfo[] locs,
       long offset) throws IOException {
     final LocatedBlock lBlk;
