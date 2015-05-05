@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+><?xml version="1.0"?>
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 
 <!--
@@ -2303,11 +2303,11 @@
   </description>
 </property>
 
-  <property>
-    <name>dfs.datanode.block-pinning.enabled</name>
-    <value>false</value>
-    <description>Whether pin blocks on favored DataNode.</description>
-  </property>
+<property>
+  <name>dfs.datanode.block-pinning.enabled</name>
+  <value>false</value>
+  <description>Whether pin blocks on favored DataNode.</description>
+</property>
 
 <property>
   <name>dfs.client.block.write.locateFollowingBlock.initial.delay.ms</name>
@@ -2331,6 +2331,27 @@
   <description>
     The class name of the HTrace SpanReceiver for the HDFS client. You do not
     need to enable this if your client program has been modified to use HTrace.
+  </description>
+</property>
+
+<property>
+  <name>dfs.datanode.stripedread.threshold.millis</name>
+  <value>5000</value>
+  <description>datanode striped read threshold in millisecond.
+  </description>
+</property>
+
+<property>
+  <name>dfs.datanode.stripedread.threads</name>
+  <value>20</value>
+  <description>datanode striped read thread pool size.
+  </description>
+</property>
+
+<property>
+  <name>dfs.datanode.stripedread.buffer.size</name>
+  <value>262144</value>
+  <description>datanode striped read buffer size.
   </description>
 </property>
 
