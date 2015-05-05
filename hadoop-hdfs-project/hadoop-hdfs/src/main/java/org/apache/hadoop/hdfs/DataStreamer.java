@@ -451,7 +451,7 @@ class DataStreamer extends Daemon {
         // get new block from namenode.
         if (stage == BlockConstructionStage.PIPELINE_SETUP_CREATE) {
           if(LOG.isDebugEnabled()) {
-            LOG.debug("Allocating new block");
+            LOG.debug("Allocating new block " + this);
           }
           setPipeline(nextBlockOutputStream());
           initDataStreaming();
@@ -469,10 +469,7 @@ class DataStreamer extends Daemon {
         long lastByteOffsetInBlock = one.getLastByteOffsetBlock();
         if (lastByteOffsetInBlock > stat.getBlockSize()) {
           throw new IOException("BlockSize " + stat.getBlockSize() +
-              " is smaller than data size. " +
-              " Offset of packet in block " +
-              lastByteOffsetInBlock +
-              " Aborting file " + src);
+              " < lastByteOffsetInBlock, " + this + ", " + one);
         }
 
         if (one.isLastPacketInBlock()) {
@@ -1684,7 +1681,7 @@ class DataStreamer extends Daemon {
       dataQueue.addLast(packet);
       lastQueuedSeqno = packet.getSeqno();
       if (LOG.isDebugEnabled()) {
-        LOG.debug("Queued packet " + packet.getSeqno());
+        LOG.debug("Queued " + packet + ", " + this);
       }
       dataQueue.notifyAll();
     }
@@ -1833,5 +1830,11 @@ class DataStreamer extends Daemon {
     if (s != null) {
       s.close();
     }
+  }
+
+  @Override
+  public String toString() {
+    return  (block == null? null: block.getLocalBlock())
+        + "@" + Arrays.toString(getNodes());
   }
 }
