@@ -58,15 +58,8 @@ public class ECChunk {
   public static ByteBuffer[] toBuffers(ECChunk[] chunks) {
     ByteBuffer[] buffers = new ByteBuffer[chunks.length];
 
-    ECChunk chunk;
     for (int i = 0; i < chunks.length; i++) {
-      chunk = chunks[i];
-      if (chunk == null) {
-        buffers[i] = null;
-        continue;
-      }
-
-      buffers[i] = chunk.getBuffer();
+      buffers[i] = chunks[i].getBuffer();
     }
 
     return buffers;
@@ -78,19 +71,12 @@ public class ECChunk {
    * @param chunks
    * @return an array of byte array
    */
-  public static byte[][] toArrays(ECChunk[] chunks) {
+  public static byte[][] toArray(ECChunk[] chunks) {
     byte[][] bytesArr = new byte[chunks.length][];
 
     ByteBuffer buffer;
-    ECChunk chunk;
     for (int i = 0; i < chunks.length; i++) {
-      chunk = chunks[i];
-      if (chunk == null) {
-        bytesArr[i] = null;
-        continue;
-      }
-
-      buffer = chunk.getBuffer();
+      buffer = chunks[i].getBuffer();
       if (buffer.hasArray()) {
         bytesArr[i] = buffer.array();
       } else {

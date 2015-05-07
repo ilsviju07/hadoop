@@ -31,30 +31,24 @@ import java.nio.ByteBuffer;
 public interface RawErasureDecoder extends RawErasureCoder {
 
   /**
-   * Decode with inputs and erasedIndexes, generates outputs.
-   * @param inputs inputs to read data from
-   * @param erasedIndexes indexes of erased units in the inputs array
-   * @param outputs outputs to write into for data generated according to
-   *                erasedIndexes
+   * Decode with inputs and erasedIndexes, generates outputs
+   * @param inputs
+   * @param outputs
    */
   public void decode(ByteBuffer[] inputs, int[] erasedIndexes,
                      ByteBuffer[] outputs);
 
   /**
-   * Decode with inputs and erasedIndexes, generates outputs.
-   * @param inputs inputs to read data from
-   * @param erasedIndexes indexes of erased units in the inputs array
-   * @param outputs outputs to write into for data generated according to
-   *                erasedIndexes
+   * Decode with inputs and erasedIndexes, generates outputs
+   * @param inputs
+   * @param outputs
    */
   public void decode(byte[][] inputs, int[] erasedIndexes, byte[][] outputs);
 
   /**
-   * Decode with inputs and erasedIndexes, generates outputs.
-   * @param inputs inputs to read data from
-   * @param erasedIndexes indexes of erased units in the inputs array
-   * @param outputs outputs to write into for data generated according to
-   *                erasedIndexes
+   * Decode with inputs and erasedIndexes, generates outputs
+   * @param inputs
+   * @param outputs
    */
   public void decode(ECChunk[] inputs, int[] erasedIndexes, ECChunk[] outputs);
 

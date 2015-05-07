@@ -19,9 +19,6 @@ package org.apache.hadoop.io.erasurecode.rawcoder;
 
 import org.apache.hadoop.conf.Configured;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
 /**
  * A common class of basic facilities to be shared by encoder and decoder
  *
@@ -29,9 +26,6 @@ import java.util.Arrays;
  */
 public abstract class AbstractRawErasureCoder
     extends Configured implements RawErasureCoder {
-
-  // Hope to reset coding buffers a little faster using it
-  protected byte[] zeroChunkBytes;
 
   private int numDataUnits;
   private int numParityUnits;
@@ -43,8 +37,6 @@ public abstract class AbstractRawErasureCoder
     this.numDataUnits = numDataUnits;
     this.numParityUnits = numParityUnits;
     this.chunkSize = chunkSize;
-
-    zeroChunkBytes = new byte[chunkSize]; // With ZERO by default
   }
 
   @Override
@@ -63,37 +55,12 @@ public abstract class AbstractRawErasureCoder
   }
 
   @Override
-  public boolean preferDirectBuffer() {
+  public boolean preferNativeBuffer() {
     return false;
   }
 
   @Override
   public void release() {
     // Nothing to do by default
-  }
-  /**
-   * Ensure the buffer (either input or output) ready to read or write with ZERO
-   * bytes fully in chunkSize.
-   * @param buffer
-   * @return the buffer itself
-   */
-  protected ByteBuffer resetDirectBuffer(ByteBuffer buffer) {
-    buffer.clear();
-    buffer.put(zeroChunkBytes);
-    buffer.position(0);
-
-    return buffer;
-  }
-
-  /**
-   * Ensure the buffer (either input or output) ready to read or write with ZERO
-   * bytes fully in chunkSize.
-   * @param buffer bytes array buffer
-   * @return the buffer itself
-   */
-  protected byte[] resetArrayBuffer(byte[] buffer) {
-    System.arraycopy(zeroChunkBytes, 0, buffer, 0, buffer.length);
-
-    return buffer;
   }
 }

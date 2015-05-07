@@ -27,10 +27,16 @@ public class XORRawDecoder extends AbstractRawErasureDecoder {
   @Override
   protected void doDecode(ByteBuffer[] inputs, int[] erasedIndexes,
                           ByteBuffer[] outputs) {
-    resetDirectBuffer(outputs[0]);
+    assert(erasedIndexes.length == outputs.length);
+    assert(erasedIndexes.length <= 1);
 
-    int bufSize = getChunkSize();
+    int bufSize = inputs[0].remaining();
     int erasedIdx = erasedIndexes[0];
+
+    // Set the output to zeros.
+    for (int j = 0; j < bufSize; j++) {
+      outputs[0].put(j, (byte) 0);
+    }
 
     // Process the inputs.
     for (int i = 0; i < inputs.length; i++) {
@@ -46,12 +52,18 @@ public class XORRawDecoder extends AbstractRawErasureDecoder {
   }
 
   @Override
-  protected void doDecode(byte[][] inputs,
-                          int[] erasedIndexes, byte[][] outputs) {
-    resetArrayBuffer(outputs[0]);
+  protected void doDecode(byte[][] inputs, int[] erasedIndexes,
+                          byte[][] outputs) {
+    assert(erasedIndexes.length == outputs.length);
+    assert(erasedIndexes.length <= 1);
 
-    int bufSize = getChunkSize();
+    int bufSize = inputs[0].length;
     int erasedIdx = erasedIndexes[0];
+
+    // Set the output to zeros.
+    for (int j = 0; j < bufSize; j++) {
+      outputs[0][j] = 0;
+    }
 
     // Process the inputs.
     for (int i = 0; i < inputs.length; i++) {

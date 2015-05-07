@@ -59,9 +59,9 @@ public class TestRSErasureCoder extends TestErasureCoderBase {
     Configuration conf = new Configuration();
     conf.set(CommonConfigurationKeys.IO_ERASURECODE_CODEC_RS_RAWCODER_KEY,
         RSRawErasureCoderFactory.class.getCanonicalName());
-
+    conf.setBoolean(
+        CommonConfigurationKeys.IO_ERASURECODE_CODEC_RS_USEXOR_KEY, false);
     prepare(conf, 10, 4, null);
-
     testCoding(true);
   }
 

@@ -26,9 +26,8 @@ public class XORRawEncoder extends AbstractRawErasureEncoder {
 
   @Override
   protected void doEncode(ByteBuffer[] inputs, ByteBuffer[] outputs) {
-    resetDirectBuffer(outputs[0]);
+    int bufSize = inputs[0].remaining();
 
-    int bufSize = getChunkSize();
     // Get the first buffer's data.
     for (int j = 0; j < bufSize; j++) {
       outputs[0].put(j, inputs[0].get(j));
@@ -44,9 +43,8 @@ public class XORRawEncoder extends AbstractRawErasureEncoder {
 
   @Override
   protected void doEncode(byte[][] inputs, byte[][] outputs) {
-    resetArrayBuffer(outputs[0]);
+    int bufSize = inputs[0].length;
 
-    int bufSize = getChunkSize();
     // Get the first buffer's data.
     for (int j = 0; j < bufSize; j++) {
       outputs[0][j] = inputs[0][j];

@@ -90,7 +90,11 @@ public abstract class AbstractErasureCoder
       throw new RuntimeException("Failed to create raw coder", e);
     }
 
-    return isEncoder ? fact.createEncoder() : fact.createDecoder();
+    if (fact != null) {
+      return isEncoder ? fact.createEncoder() : fact.createDecoder();
+    }
+
+    return null;
   }
 
   @Override

@@ -32,7 +32,9 @@ public abstract class AbstractRawErasureDecoder extends AbstractRawErasureCoder
   @Override
   public void decode(ByteBuffer[] inputs, int[] erasedIndexes,
                      ByteBuffer[] outputs) {
-    checkParameters(inputs, erasedIndexes, outputs);
+    if (erasedIndexes.length == 0) {
+      return;
+    }
 
     doDecode(inputs, erasedIndexes, outputs);
   }
@@ -48,7 +50,9 @@ public abstract class AbstractRawErasureDecoder extends AbstractRawErasureCoder
 
   @Override
   public void decode(byte[][] inputs, int[] erasedIndexes, byte[][] outputs) {
-    checkParameters(inputs, erasedIndexes, outputs);
+    if (erasedIndexes.length == 0) {
+      return;
+    }
 
     doDecode(inputs, erasedIndexes, outputs);
   }
@@ -65,42 +69,25 @@ public abstract class AbstractRawErasureDecoder extends AbstractRawErasureCoder
   @Override
   public void decode(ECChunk[] inputs, int[] erasedIndexes,
                      ECChunk[] outputs) {
-    checkParameters(inputs, erasedIndexes, outputs);
+    doDecode(inputs, erasedIndexes, outputs);
+  }
 
-    boolean hasArray = inputs[0].getBuffer().hasArray();
-    if (hasArray) {
-      byte[][] inputBytesArr = ECChunk.toArrays(inputs);
-      byte[][] outputBytesArr = ECChunk.toArrays(outputs);
+  /**
+   * Perform the real decoding using chunks
+   * @param inputs
+   * @param erasedIndexes
+   * @param outputs
+   */
+  protected void doDecode(ECChunk[] inputs, int[] erasedIndexes,
+                          ECChunk[] outputs) {
+    if (inputs[0].getBuffer().hasArray()) {
+      byte[][] inputBytesArr = ECChunk.toArray(inputs);
+      byte[][] outputBytesArr = ECChunk.toArray(outputs);
       doDecode(inputBytesArr, erasedIndexes, outputBytesArr);
     } else {
       ByteBuffer[] inputBuffers = ECChunk.toBuffers(inputs);
       ByteBuffer[] outputBuffers = ECChunk.toBuffers(outputs);
       doDecode(inputBuffers, erasedIndexes, outputBuffers);
     }
-  }
-  /**
-   * Check and validate decoding parameters, throw exception accordingly. The
-   * checking assumes it's a MDS code. Other code  can override this.
-   * @param inputs
-   * @param erasedIndexes
-   * @param outputs
-   */
-  protected void checkParameters(Object[] inputs, int[] erasedIndexes,
-                                 Object[] outputs) {
-    if (inputs.length != getNumParityUnits() + getNumDataUnits()) {
-      throw new IllegalArgumentException("Invalid inputs length");
-    }
-
-    if (erasedIndexes.length != outputs.length) {
-      throw new IllegalArgumentException(
-          "erasedIndexes and outputs mismatch in length");
-    }
-
-    if (erasedIndexes.length > getNumParityUnits()) {
-      throw new IllegalArgumentException(
-          "Too many erased, not recoverable");
-    }
-
-
   }
 }
