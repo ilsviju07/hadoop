@@ -503,23 +503,28 @@ public class FSDirectory implements Closeable {
     writeLock();
     try {
       final INodeFile fileINode = inodesInPath.getLastINode().asFile();
-      short numLocations = isStriped ?
-          HdfsConstants.NUM_DATA_BLOCKS + HdfsConstants.NUM_PARITY_BLOCKS :
-          fileINode.getFileReplication();
       Preconditions.checkState(fileINode.isUnderConstruction());
-
-      // check quota limits and updated space consumed
-      // TODO add quota usage for EC files
-      updateCount(inodesInPath, 0, fileINode.getPreferredBlockSize(),
-          fileINode.getBlockReplication(), true);
 
       // associate new last block for the file
       final BlockInfo blockInfo;
       if (isStriped) {
-        blockInfo = new BlockInfoStripedUnderConstruction(block,
-            HdfsConstants.NUM_DATA_BLOCKS, HdfsConstants.NUM_PARITY_BLOCKS,
-            BlockUCState.UNDER_CONSTRUCTION, targets);
+        ECSchema ecSchema = getECSchema(inodesInPath);
+        short numDataUnits = (short) ecSchema.getNumDataUnits();
+        short numParityUnits = (short) ecSchema.getNumParityUnits();
+        short numLocations = (short) (numDataUnits + numParityUnits);
+
+        // check quota limits and updated space consumed
+        updateCount(inodesInPath, 0, fileINode.getPreferredBlockSize(),
+            numLocations, true);
+
+        blockInfo = new BlockInfoStripedUnderConstruction(block, numDataUnits,
+            numParityUnits, BlockUCState.UNDER_CONSTRUCTION, targets);
       } else {
+        // check quota limits and updated space consumed
+        updateCount(inodesInPath, 0, fileINode.getPreferredBlockSize(),
+            fileINode.getBlockReplication(), true);
+
+        short numLocations = fileINode.getFileReplication();
         blockInfo = new BlockInfoContiguousUnderConstruction(block,
             numLocations, BlockUCState.UNDER_CONSTRUCTION, targets);
       }
@@ -687,7 +692,7 @@ public class FSDirectory implements Closeable {
     final INodeFile fileINode = iip.getLastINode().asFile();
     EnumCounters<StorageType> typeSpaceDeltas =
       getStorageTypeDeltas(fileINode.getStoragePolicyID(), ssDelta,
-          replication, replication);;
+          replication, replication);
     updateCount(iip, iip.length() - 1,
       new QuotaCounts.Builder().nameSpace(nsDelta).storageSpace(ssDelta * replication).
           typeSpaces(typeSpaceDeltas).build(),
